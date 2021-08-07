@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import ReactHtmlParser from 'react-html-parser';
 
-import { generateBoard, solve } from './board.js';
+import { generateBoard } from './board.js';
 
 function Square(props) {
     if (props.showAnwser) {
@@ -93,6 +93,8 @@ class Game extends React.Component {
         let history = this.state.history;
         let current = history[history.length - 1];
         const boxIndex = Math.trunc(row / 3) * 3 + Math.trunc(col / 3);
+
+        num = parseInt(num);
 
         if (current.rows[row].has(num)) {
             status = `cannot place ${styled(num)} in board row ${styled(row + 1)}`;
