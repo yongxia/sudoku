@@ -1,15 +1,28 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import ReactHtmlParser from 'react-html-parser';
 
-import { generateBoard } from './board.js';
+import { generateBoard, solve } from './board.js';
 
 function Square(props) {
+    if (props.showAnwser) {
+        return props.disabled ? (<input
+            className="square"
+            value={props.value}
+            disabled
+        />) : (<input
+            style={{ color: '#d74242' }}
+            className="square"
+            value={props.value}
+            disabled />)
+    }
+
     if (props.disabled) {
         return <input
             className="square"
             value={props.value}
-            disabled={props.disabled}
+            disabled
         />
     }
 
@@ -29,6 +42,7 @@ class Board extends React.Component {
             key={`${row},${col}`}
             value={val}
             disabled={disabled}
+            showAnwser={this.props.showAnwser}
             onChange={(num) => this.props.onChange(num, row, col)}
         />;
     }
@@ -46,15 +60,12 @@ class Board extends React.Component {
 }
 
 class Game extends React.Component {
-
     constructor(props) {
         super(props);
-
-        const { board: startBoard, rows, cols, boxes } = generateBoard();
-        const board = startBoard.map(row => row.map(val => val));
-        console.log(rows, cols, boxes)
+        const { board, rows, cols, boxes } = generateBoard();
+        const current = clone({ board, rows, cols, boxes });
+        const anwser = solve(current);
         this.state = {
-            startBoard,
             history: [
                 {
                     board,
@@ -65,50 +76,47 @@ class Game extends React.Component {
             ],
             stepNumber: 0,
             status: '',
+            solved: {
+                diaplay: false,
+                anwser,
+            },
         }
     }
 
     handleChange = (num, row, col) => {
+
+        let status;
         if (!/[1-9]/.test(num)) {
-            alert(`non numeric key "${num}" pressed, expect key 1 to 9`);
+            status = `key ${styled(num.toUpperCase())} is pressed, expect key 1 to 9`;
+            this.setState({ status });
             return;
         }
 
-        let r = Math.trunc(row / 3), c = Math.trunc(col / 3);
-        let key = `${r},${c}`;
         let history = this.state.history;
         let current = history[history.length - 1];
-        let status;
+        const boxIndex = Math.trunc(row / 3) * 3 + Math.trunc(col / 3);
+
         if (current.rows[row].has(num)) {
-            status = `${num} can not be placed in board row: ${row + 1}`;
+            status = `cannot place ${styled(num)} in board row ${styled(row + 1)}`;
             this.setState({ status });
             return;
         } else if (current.cols[col].has(num)) {
-            status = `${num} can not be placed in board column: ${col + 1}`;
+            status = `cannot place ${styled(num)} in board column ${styled(col + 1)}`;
             this.setState({ status });
             return;
-        } else if (current.boxes[key].has(num)) {
-            status = `${num} can not be placed in board row: ${row + 1}, column: ${col + 1}`;
+        } else if (current.boxes[boxIndex].has(num)) {
+            status = `cannot place ${styled(num)} in board row ${styled(row + 1)}, column ${styled(col + 1)}`;
             this.setState({ status });
             return;
         }
 
         history = this.state.history.slice(0, this.state.stepNumber + 1);
         current = history[history.length - 1];
-
-        const board = current.board.map(row => row.map(val => val));
-        const rows = current.rows.map(set => new Set(set));
-        const cols = current.cols.map(set => new Set(set));
-        const boxes = {};
-        for (key in current.boxes) {
-            boxes[key] = new Set(current.boxes[key]);
-        }
-
+        const { board, rows, cols, boxes } = clone(current);
         board[row][col] = num;
         rows[row].add(num);
         cols[col].add(num);
-        boxes[key].add(num);
-
+        boxes[boxIndex].add(num);
         this.setState({
             history: history.concat([{
                 board,
@@ -119,19 +127,27 @@ class Game extends React.Component {
             stepNumber: history.length,
             status: '',
         });
-
-        console.log(row, col, board)
     }
 
     jumpTo(move) {
-        this.setState({ stepNumber: move });
+        this.setState({
+            stepNumber: move,
+            solved: { ...this.state.solved, display: false }
+        });
+    }
+
+    handleClickToggleResult() {
+        const solved = this.state.solved;
+        this.setState({ solved: { ...solved, display: true } })
     }
 
     render() {
 
         const status = this.state.status;
         const history = this.state.history;
-        const current = history[this.state.stepNumber];
+        const solved = this.state.solved;
+        const current = solved.display ? { board: solved.anwser, rows: null, cols: null, boxes: null } :
+            history[this.state.stepNumber];
 
         const moves = history.map((step, move) => {
             const desc = move ?
@@ -148,7 +164,8 @@ class Game extends React.Component {
             <div className="game">
                 <div className="game-board">
                     <Board
-                        startBoard={this.state.startBoard}
+                        startBoard={this.state.history[0].board}
+                        showAnwser={solved.display}
                         board={current.board}
                         rows={current.rows}
                         cols={current.cols}
@@ -157,8 +174,8 @@ class Game extends React.Component {
                     />
                 </div>
                 <div className="game-info">
-                    <div>Sudoku Game</div>
-                    <div>{status}</div>
+                    <div>Sudoku Game <span><button onClick={() => this.handleClickToggleResult()}>Show anwser</button></span></div>
+                    <div>{ReactHtmlParser(status)}</div>
                     <ol>{moves}</ol>
                 </div>
             </div>
@@ -167,6 +184,22 @@ class Game extends React.Component {
 }
 
 // ========================================
+// helper functions
+const clone = (current) => {
+    const board = current.board.map(row => row.map(val => val));
+    const rows = current.rows.map(set => new Set(set));
+    const cols = current.cols.map(set => new Set(set));
+    const boxes = {};
+    for (let _key in current.boxes) {
+        boxes[_key] = new Set(current.boxes[_key]);
+    }
+    return { board, rows, cols, boxes };
+}
+
+const styled = (s) => `<strong style="color:#d74242">${s}</strong>`
+
+// ========================================
+
 
 ReactDOM.render(
     <Game />,
