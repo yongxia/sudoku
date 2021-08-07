@@ -63,13 +63,15 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         const { board, rows, cols, boxes, anwser } = generateBoard();
+        const lastNumbers = Array(board.length).fill(0).map(() => Array(9).fill(null));
         this.state = {
             history: [
                 {
                     board,
                     rows,
                     cols,
-                    boxes
+                    boxes,
+                    lastNumbers,
                 }
             ],
             stepNumber: 0,
@@ -113,16 +115,25 @@ class Game extends React.Component {
         history = this.state.history.slice(0, this.state.stepNumber + 1);
         current = history[history.length - 1];
         const { board, rows, cols, boxes } = clone(current);
+        let lastNumbers = current.lastNumbers.map(row => row.map(val => val));
+        const lastNum = lastNumbers[col][row];
+        if (lastNum) {
+            rows[row].delete(lastNum);
+            cols[col].delete(lastNum);
+            boxes[boxIndex].delete(lastNum);
+        }
         board[row][col] = num;
         rows[row].add(num);
         cols[col].add(num);
         boxes[boxIndex].add(num);
+        lastNumbers[col][row] = num;
         this.setState({
             history: history.concat([{
                 board,
                 rows,
                 cols,
                 boxes,
+                lastNumbers,
             }]),
             stepNumber: history.length,
             status: '',
