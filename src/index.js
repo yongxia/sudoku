@@ -50,7 +50,7 @@ class Board extends React.Component {
     render() {
         const board = this.props.board;
         return (
-            <div>
+            <div className='board'>
                 {board.map((arr, row) => <div key={row} className="board-row">{
                     arr.map((val, col) => this.renderSquare(val, row, col))
                 }</div>)}
@@ -192,6 +192,7 @@ class Game extends React.Component {
         });
 
         return (
+
             <div className="game">
                 <div className="game-board">
                     <Board
@@ -210,6 +211,7 @@ class Game extends React.Component {
                     <ol>{moves}</ol>
                 </div>
             </div>
+
         );
     }
 }
