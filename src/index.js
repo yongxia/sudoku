@@ -136,7 +136,27 @@ class Game extends React.Component {
         });
     }
 
-    handleClickToggleResult() {
+    handleClickNewBoard() {
+        const { board, rows, cols, boxes, anwser } = generateBoard();
+        this.setState({
+            history: [
+                {
+                    board,
+                    rows,
+                    cols,
+                    boxes
+                }
+            ],
+            stepNumber: 0,
+            status: '',
+            solved: {
+                diaplay: false,
+                anwser,
+            },
+        });
+    }
+
+    handleClickShowAnswer() {
         const solved = this.state.solved;
         this.setState({ solved: { ...solved, display: true } })
     }
@@ -174,7 +194,7 @@ class Game extends React.Component {
                     />
                 </div>
                 <div className="game-info">
-                    <div>Sudoku Game <span><button onClick={() => this.handleClickToggleResult()}>Show anwser</button></span></div>
+                    <div>Sudoku Game <span><button onClick={() => this.handleClickNewBoard()}>New board</button></span> <span><button onClick={() => this.handleClickShowAnswer()}>Show anwser</button></span></div>
                     <div>{ReactHtmlParser(status)}</div>
                     <ol>{moves}</ol>
                 </div>
