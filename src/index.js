@@ -149,13 +149,15 @@ class Game extends React.Component {
 
     handleClickNewBoard() {
         const { board, rows, cols, boxes, anwser } = generateBoard();
+        const lastNumbers = Array(board.length).fill(0).map(() => Array(9).fill(null));
         this.setState({
             history: [
                 {
                     board,
                     rows,
                     cols,
-                    boxes
+                    boxes,
+                    lastNumbers
                 }
             ],
             stepNumber: 0,
