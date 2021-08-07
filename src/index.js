@@ -197,9 +197,7 @@ const clone = (current) => {
 }
 
 const styled = (s) => `<strong style="color:#d74242">${s}</strong>`
-
 // ========================================
-
 
 ReactDOM.render(
     <Game />,
