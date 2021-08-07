@@ -1,19 +1,29 @@
-export const generateBoard = () => {
-    const board = [
-        ["5", "3", "", "", "7", "", "", "", ""],
-        ["6", "", "", "1", "9", "5", "", "", ""],
-        ["", "9", "8", "", "", "", "", "6", ""],
-        ["8", "", "", "", "6", "", "", "", "3"],
-        ["4", "", "", "8", "", "3", "", "", "1"],
-        ["7", "", "", "", "2", "", "", "", "6"],
-        ["", "6", "", "", "", "", "2", "8", ""],
-        ["", "", "", "4", "1", "9", "", "", "5"],
-        ["", "", "", "", "8", "", "", "7", "9"]
-    ];
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
 
-    // initialize row sets, col sets and box sets
+export const generateBoard = () => {
+    const N = 9;
+    let board = Array(N).fill(0).map(() => Array(N).fill(''));
+    const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    //Fill all the diagonal 3x3 matrices
+    for (let d = 0; d < N; d += 3) {
+        shuffleArray(nums);
+        let k = 0;
+        for (let i = d; i < d + 3; i++) {
+            for (let j = d; j < d + 3; j++) {
+                board[i][j] = nums[k];
+                k++;
+            }
+        }
+    }
+
     const rows = board.map(row => new Set(row));
-    let cols = [];
+    const cols = [];
     for (let col = 0; col < board.length; col++) {
         const set = new Set();
         for (let row = 0; row < board.length; row++) {
@@ -21,7 +31,7 @@ export const generateBoard = () => {
         }
         cols.push(set);
     }
-    let boxes = {};
+    const boxes = {};
     for (let row = 0; row < board.length; row++) {
         for (let col = 0; col < board.length; col++) {
             const boxIndex = Math.trunc(row / 3) * 3 + Math.trunc(col / 3);
@@ -32,9 +42,31 @@ export const generateBoard = () => {
         }
     }
 
-    return { board, rows, cols, boxes };
+    const anwser = solve({ board, rows, cols, boxes });
+    board = anwser.map(row => row.map(val => val));
 
+    //remove elements
+    const K = 4;
+    let i = 0, j = 0;
+    while (i < N && j < N) {
+        const step = Math.floor(Math.random() * K);
+        j += step;
+        if (j >= N) {
+            j = 0;
+            i++;
+            if (i >= N) break;
+        }
+        const num = board[i][j];
+        board[i][j] = '';
+        rows[i].delete(num);
+        cols[j].delete(num);
+        const boxIndex = Math.trunc(i / 3) * 3 + Math.trunc(j / 3);
+        boxes[boxIndex].delete(num);
+    }
+
+    return { board, rows, cols, boxes, anwser };
 }
+
 
 export const solve = ({ board, rows, cols, boxes }) => {
 
@@ -67,7 +99,5 @@ export const solve = ({ board, rows, cols, boxes }) => {
     }
 
     backtrack(0, 0);
-
     return board;
 }
-

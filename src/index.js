@@ -62,9 +62,7 @@ class Board extends React.Component {
 class Game extends React.Component {
     constructor(props) {
         super(props);
-        const { board, rows, cols, boxes } = generateBoard();
-        const current = clone({ board, rows, cols, boxes });
-        const anwser = solve(current);
+        const { board, rows, cols, boxes, anwser } = generateBoard();
         this.state = {
             history: [
                 {
